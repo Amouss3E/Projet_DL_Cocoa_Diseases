@@ -1,10 +1,7 @@
 streamlit
-opencv-python-headless==4.5.5.62
 numpy
 tensorflow
 scikit-learn
 matplotlib
 pillow
 joblib
-libgl1-mesa-glx
-pyqt5
