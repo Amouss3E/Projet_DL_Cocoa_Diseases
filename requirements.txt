@@ -6,3 +6,4 @@ scikit-learn
 matplotlib
 pillow
 joblib
+libgl1-mesa-glx
