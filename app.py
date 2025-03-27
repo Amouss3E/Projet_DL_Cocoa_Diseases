@@ -47,7 +47,7 @@ if selected_image:
         reduced_features = pca.fit_transform(all_features.reshape(1, -1))
         
         # Prédiction
-        model = joblib.load("disease_classifier.pkl")  # Charger le modèle de classification
+        model = joblib.load("modele_svm.pkl")  # Charger le modèle de classification
         prediction = model.predict(reduced_features)[0]
         
         # Affichage du résultat
