@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import cv2
 import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "0"  # Désactive OpenEXR qui peut causer des problèmes
+import cv2
 import joblib
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Model
