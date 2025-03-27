@@ -1,9 +1,7 @@
 import streamlit as st
 import numpy as np
-import cv2
+from PIL import Image
 import os
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "0"  # Désactive OpenEXR qui peut causer des problèmes
-import cv2
 import joblib
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Model
@@ -37,9 +35,14 @@ if selected_image:
     
     if st.button("Segmenter la cabosse"):
         x, y, w, h = boxes[selected_box]
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cabosse = image[y:y+h, x:x+w]
+        
+        # Ouvrir l'image avec PIL
+        image = Image.open(image_path)
+        image = image.convert("RGB")
+        image_array = np.array(image)  # Convertir en tableau numpy
+        
+        # Extraire la cabosse
+        cabosse = image_array[y:y+h, x:x+w]
         
         # Extraction des caractéristiques
         all_features = extract_all_features(cabosse, cnn_models)
