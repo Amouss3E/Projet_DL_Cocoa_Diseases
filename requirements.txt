@@ -5,3 +5,4 @@ scikit-learn
 matplotlib
 pillow
 joblib
+scikit-image
