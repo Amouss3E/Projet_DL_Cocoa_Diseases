@@ -1,10 +1,9 @@
 import numpy as np
-import cv2
+from PIL import Image, ImageDraw
 import tensorflow as tf
 from tensorflow.keras.applications import MobileNetV2, ResNet50, EfficientNetB0
 from tensorflow.keras.models import Model
 from skimage.feature import graycomatrix, graycoprops
-import joblib
 
 def load_cnn_models():
     cnn_models = {
@@ -15,12 +14,15 @@ def load_cnn_models():
     return {name: Model(inputs=model.input, outputs=model.layers[-2].output) for name, model in cnn_models.items()}
 
 def extract_texture(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    gray = image.convert("L")  # Convertir en niveaux de gris
+    gray_np = np.array(gray)
+
     distances = [1, 3, 5, 0, 0]
     angles = [0, 0, 0, np.pi/4, np.pi/2]
     features = []
+
     for d, a in zip(distances, angles):
-        glcm = graycomatrix(gray, distances=[d], angles=[a], levels=256, symmetric=True, normed=True)
+        glcm = graycomatrix(gray_np, distances=[d], angles=[a], levels=256, symmetric=True, normed=True)
         features.extend([
             graycoprops(glcm, 'contrast')[0, 0],
             graycoprops(glcm, 'correlation')[0, 0],
@@ -31,31 +33,33 @@ def extract_texture(image):
     return np.array(features)
 
 def extract_color_histogram(image):
-    hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    image_np = np.array(image)
+    hist = np.histogram(image_np.flatten(), bins=256, range=[0, 256])[0]
     return hist.flatten()
 
 def extract_hu_moments(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    moments = cv2.moments(gray)
-    hu_moments = cv2.HuMoments(moments)
-    return hu_moments.flatten()
+    gray = image.convert("L")  # Convertir en niveaux de gris
+    gray_np = np.array(gray)
+    moments = tf.image.moments(gray_np, axes=[0, 1])
+    hu_moments = moments.central_moments.numpy().flatten()
+    return hu_moments
 
 def extract_all_features(image, cnn_models):
-    image_resized = cv2.resize(image, (224, 224)) / 255.0
-    image_resized = np.expand_dims(image_resized, axis=0)
-    
-    cnn_features = np.hstack([model.predict(image_resized).flatten() for model in cnn_models.values()])
-    
+    image_resized = image.resize((224, 224))
+    image_np = np.array(image_resized) / 255.0
+    image_np = np.expand_dims(image_np, axis=0)
+
+    cnn_features = np.hstack([model.predict(image_np).flatten() for model in cnn_models.values()])
+
     texture_features = extract_texture(image)
     color_features = extract_color_histogram(image)
     shape_features = extract_hu_moments(image)
-    
+
     return np.concatenate([cnn_features, texture_features, color_features, shape_features])
 
 def display_image_with_boxes(image_path, boxes):
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = Image.open(image_path).convert("RGB")
+    draw = ImageDraw.Draw(image)
     for (x, y, w, h) in boxes:
-        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        draw.rectangle([x, y, x + w, y + h], outline="red", width=3)
     return image
-
