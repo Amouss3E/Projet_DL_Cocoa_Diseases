@@ -77,6 +77,9 @@ import joblib
 from tensorflow.keras.models import Model
 from sklearn.decomposition import PCA
 
+if "segmented_pods" not in st.session_state:
+    st.session_state.segmented_pods = {}
+    
 # Chemin du dossier contenant les images et annotations
 IMAGE_DIR = "Images"
 
