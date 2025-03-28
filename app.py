@@ -1,4 +1,3 @@
-
 import numpy as np
 from PIL import Image, ImageDraw
 import tensorflow as tf
@@ -96,7 +95,7 @@ if selected_image:
     
     # Affichage de l'image avec boîtes
     image_with_boxes = display_image_with_boxes(image_path, boxes)
-    st.image(image_with_boxes, caption="Détection des cabosses", use_column_width=True)
+    st.image(image_with_boxes, caption="Détection des cabosses", use_container_width=True)
     
     # Sélection d'une cabosse
     selected_box = st.selectbox("Sélectionnez une cabosse", range(len(boxes)))
@@ -124,5 +123,5 @@ if selected_image:
         prediction = model.predict(reduced_features)[0]
         
         # Affichage du résultat
-        st.image(cabosse, caption="Cabosse segmentée", use_column_width=True)
+        st.image(cabosse, caption="Cabosse segmentée", use_container_width=True)
         st.write(f"**Maladie prédite :** {prediction}")
