@@ -92,7 +92,7 @@ if selected_image:
     
     # Chargement des boîtes englobantes
     with open(txt_path, "r") as f:
-        boxes = [list(map(int, line.strip().split())) for line in f]
+        boxes = [list(map(lambda x: int(float(x)), line.strip().split())) for line in f]
     
     # Affichage de l'image avec boîtes
     image_with_boxes = display_image_with_boxes(image_path, boxes)
