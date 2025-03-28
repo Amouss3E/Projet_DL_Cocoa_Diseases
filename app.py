@@ -115,7 +115,7 @@ st.subheader("Images disponibles")
 cols = st.columns(4)
 for i, file in enumerate(filenames):
     with cols[i % 4]:
-        st.image(images[i], caption=file, use_column_width=True)
+        st.image(images[i], caption=file, use_container_width=True)
 
 ### **2. Sélection d'une image et affichage des boîtes**
 st.subheader("Sélection d'une image")
@@ -131,10 +131,10 @@ if selected_image:
         x, y, w, h = bbox
         x1, y1 = (x - w/2) * image.width, (y - h/2) * image.height
         x2, y2 = (x + w/2) * image.width, (y + h/2) * image.height
-        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+        draw.rectangle([x1, y1, x2, y2], outline="yellow", width=6)
 
     # Affichage de l'image avec boîtes
-    st.image(image, caption="Image avec boîtes englobantes", use_column_width=True)
+    st.image(image, caption="Image avec boîtes englobantes", use_container_width=True)
 
 ### **3. Segmentation des cabosses**
 if st.button("Segmenter toutes les cabosses"):
@@ -154,7 +154,7 @@ if selected_image in st.session_state.get("segmented_pods", {}):
     st.subheader("Cabosses segmentées")
     pod_cols = st.columns(4)
     for i, pod in enumerate(st.session_state.segmented_pods[selected_image]):
-        pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_column_width=True)
+        pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_container_width=True)
 
 ### **4. Prédiction**
 if selected_image in st.session_state.segmented_pods:
@@ -178,5 +178,5 @@ if selected_image in st.session_state.segmented_pods:
         prediction = model.predict(reduced_features)[0]
 
         # Affichage du résultat
-        st.image(pod, caption=f"Cabosse {selected_pod}", use_column_width=True)
+        st.image(pod, caption=f"Cabosse {selected_pod}", use_container_width=True)
         st.write(f"**Maladie prédite :** {prediction}")
