@@ -92,7 +92,7 @@ st.subheader("Images disponibles")
 cols = st.columns(4)
 for i, img_file in enumerate(image_files):
     img = Image.open(os.path.join("Images", img_file))
-    cols[i % 4].image(img, caption=img_file, use_column_width=True)
+    cols[i % 4].image(img, caption=img_file, use_container_width=True)
 
 # 2. Sélection d'une image
 selected_image = st.selectbox("Choisissez une image", image_files)
