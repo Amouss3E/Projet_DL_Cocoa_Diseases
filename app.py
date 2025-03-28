@@ -121,10 +121,10 @@ for i, file in enumerate(filenames):
         st.image(images[i], caption=file, use_container_width=True)
 
 ### **2. Sélection d'une image et affichage des boîtes**
-st.subheader("Sélection d'une image")
+st.subheader("Détection des cabosses")
 
 # Ajout d'une option vide au selectbox
-selected_image = st.selectbox("Choisissez une image", ["Sélectionnez une image"] + filenames)
+selected_image = st.selectbox("Choisissez une image", ["Images"] + filenames)
 
 # N'afficher l'image que si une vraie image a été choisie
 if selected_image != "Sélectionnez une image":
