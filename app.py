@@ -122,9 +122,12 @@ for i, file in enumerate(filenames):
 
 ### **2. Sélection d'une image et affichage des boîtes**
 st.subheader("Sélection d'une image")
-selected_image = st.selectbox("Choisissez une image", filenames)
 
-if selected_image:
+# Ajout d'une option vide au selectbox
+selected_image = st.selectbox("Choisissez une image", ["Sélectionnez une image"] + filenames)
+
+# N'afficher l'image que si une vraie image a été choisie
+if selected_image != "Sélectionnez une image":
     index = filenames.index(selected_image)
     image = images[index].copy()  # Copie pour éviter de modifier l'originale
     draw = ImageDraw.Draw(image)
@@ -134,10 +137,10 @@ if selected_image:
         x, y, w, h = bbox
         x1, y1 = (x - w/2) * image.width, (y - h/2) * image.height
         x2, y2 = (x + w/2) * image.width, (y + h/2) * image.height
-        draw.rectangle([x1, y1, x2, y2], outline="yellow", width=6)
+        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
 
     # Affichage de l'image avec boîtes
-    st.image(image, caption="Image avec boîtes englobantes", use_container_width=True)
+    st.image(image, use_column_width=True)
 
 ### **3. Segmentation des cabosses**
 if st.button("Segmenter toutes les cabosses"):
