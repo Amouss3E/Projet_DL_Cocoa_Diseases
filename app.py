@@ -101,7 +101,7 @@ if selected_image:
     txt_path = image_path.replace(".jpg", ".txt")
     
     with open(txt_path, "r") as f:
-        boxes = [list(map(int, line.strip().split())) for line in f]
+        boxes = [list(map(lambda x: int(float(x)), line.strip().split())) for line in f]
     
     # Affichage de l'image avec boîtes
     img = Image.open(image_path)
@@ -109,7 +109,7 @@ if selected_image:
     for box in boxes:
         x, y, w, h = box
         draw.rectangle([x, y, x + w, y + h], outline="red", width=2)
-    st.image(img, caption="Détection des cabosses", use_column_width=True)
+    st.image(img, caption="Détection des cabosses", use_container_width=True)
     
     # 3. Segmentation de toutes les cabosses
     if st.button("Segmenter toutes les cabosses"):
@@ -124,7 +124,7 @@ if selected_image:
         st.subheader("Cabosses segmentées")
         pod_cols = st.columns(4)
         for i, pod in enumerate(st.session_state.segmented_pods[selected_image]):
-            pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_column_width=True)
+            pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_container_width=True)
     
     # 4. Prédiction
     if selected_image in st.session_state.segmented_pods:
