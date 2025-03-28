@@ -109,14 +109,15 @@ if selected_image:
         image_array = np.array(image)  # Convertir en tableau numpy
         
         # Extraire la cabosse
-        cabosse = image_array[y:y+h, x:x+w]
+        cabosse = Image.fromarray(image_array[y:y+h, x:x+w])
+        cabosse = cabosse.resize((224, 224))
         
         # Extraction des caractéristiques
         all_features = extract_all_features(cabosse, cnn_models)
         
         # Réduction avec ACP
         pca = PCA(n_components=0.99)
-        reduced_features = pca.fit_transform(all_features.reshape(1, -1))
+        reduced_features = pca.fit_transform(all_features)
         
         # Prédiction
         model = joblib.load("modele_svm.pkl")  # Charger le modèle de classification
