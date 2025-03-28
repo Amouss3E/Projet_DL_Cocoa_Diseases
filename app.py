@@ -67,74 +67,116 @@ def display_image_with_boxes(image_path, boxes):
 
 
 
+
+
 import streamlit as st
 import os
 import numpy as np
-import joblib
-import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
+import joblib
 from tensorflow.keras.models import Model
 from sklearn.decomposition import PCA
-from utils import load_cnn_models, extract_all_features
 
-# Chargement des modèles CNN
-cnn_models = load_cnn_models()
+# Chemin du dossier contenant les images et annotations
+IMAGE_DIR = "Images"
 
-# Initialisation de l'état de session
-if 'segmented_pods' not in st.session_state:
-    st.session_state.segmented_pods = {}
+# Fonction pour charger les images et leurs annotations
+def load_data(directory):
+    images, bboxes, filenames = [], [], []
+    for file in os.listdir(directory):
+        if file.endswith(".jpg"):
+            img_path = os.path.join(directory, file)
+            txt_path = img_path.replace(".jpg", ".txt")
 
+            # Charger l'image
+            image = Image.open(img_path).convert("RGB")
+            images.append(image)
+
+            # Charger les annotations (boîtes englobantes)
+            if os.path.exists(txt_path):
+                with open(txt_path, "r") as f:
+                    annotations = [list(map(float, line.split())) for line in f.readlines()]
+                    bboxes.append(annotations)
+            else:
+                bboxes.append([])  # Pas d'annotations pour cette image
+
+            filenames.append(file)
+
+    return images, bboxes, filenames
+
+# Charger les images et annotations
+images, bboxes, filenames = load_data(IMAGE_DIR)
+
+# Interface Streamlit
 st.title("Détection et classification des maladies du cacaoyer")
 
-# 1. Affichage des images sous forme de grille
-image_files = [f for f in os.listdir("Images") if f.endswith(".jpg")]
+### **1. Affichage en grille des images**
 st.subheader("Images disponibles")
 cols = st.columns(4)
-for i, img_file in enumerate(image_files):
-    img = Image.open(os.path.join("Images", img_file))
-    cols[i % 4].image(img, caption=img_file, use_container_width=True)
+for i, file in enumerate(filenames):
+    with cols[i % 4]:
+        st.image(images[i], caption=file, use_column_width=True)
 
-# 2. Sélection d'une image
-selected_image = st.selectbox("Choisissez une image", image_files)
+### **2. Sélection d'une image et affichage des boîtes**
+st.subheader("Sélection d'une image")
+selected_image = st.selectbox("Choisissez une image", filenames)
+
 if selected_image:
-    image_path = os.path.join("Images", selected_image)
-    txt_path = image_path.replace(".jpg", ".txt")
-    
-    with open(txt_path, "r") as f:
-        boxes = [list(map(lambda x: int(float(x)), line.strip().split())) for line in f]
-    
-    # Affichage de l'image avec boîtes
-    img = Image.open(image_path)
-    draw = ImageDraw.Draw(img)
-    for box in boxes:
-        x, y, w, h = box
-        draw.rectangle([x, y, x + w, y + h], outline="red", width=2)
-    st.image(img, caption="Détection des cabosses", use_container_width=True)
-    
-    # 3. Segmentation de toutes les cabosses
-    if st.button("Segmenter toutes les cabosses"):
-        segmented_pods = []
-        for i, (x, y, w, h) in enumerate(boxes, start=1):
-            pod = img.crop((x, y, x + w, y + h))
-            segmented_pods.append(pod)
-        st.session_state.segmented_pods[selected_image] = segmented_pods
-    
-    # Affichage des cabosses segmentées
-    if selected_image in st.session_state.segmented_pods:
-        st.subheader("Cabosses segmentées")
-        pod_cols = st.columns(4)
-        for i, pod in enumerate(st.session_state.segmented_pods[selected_image]):
-            pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_container_width=True)
-    
-    # 4. Prédiction
-    if selected_image in st.session_state.segmented_pods:
-        selected_pod_idx = st.selectbox("Sélectionnez une cabosse", range(1, len(st.session_state.segmented_pods[selected_image]) + 1))
-        if st.button("Prédire la maladie"):
-            pod = st.session_state.segmented_pods[selected_image][selected_pod_idx - 1]
-            features = extract_all_features(np.array(pod), cnn_models)
-            pca = PCA(n_components=0.99)
-            reduced_features = pca.fit_transform(features.reshape(1, -1))
-            model = joblib.load("disease_classifier.pkl")
-            prediction = model.predict(reduced_features)[0]
-            st.write(f"**Maladie prédite :** {prediction}")
+    index = filenames.index(selected_image)
+    image = images[index].copy()  # Copie pour éviter de modifier l'originale
+    draw = ImageDraw.Draw(image)
 
+    # Dessiner les boîtes englobantes
+    for bbox in bboxes[index]:
+        x, y, w, h = bbox
+        x1, y1 = (x - w/2) * image.width, (y - h/2) * image.height
+        x2, y2 = (x + w/2) * image.width, (y + h/2) * image.height
+        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+
+    # Affichage de l'image avec boîtes
+    st.image(image, caption="Image avec boîtes englobantes", use_column_width=True)
+
+### **3. Segmentation des cabosses**
+if st.button("Segmenter toutes les cabosses"):
+    segmented_pods = []
+    
+    for bbox in bboxes[index]:
+        x, y, w, h = bbox
+        x1, y1 = int((x - w/2) * image.width), int((y - h/2) * image.height)
+        x2, y2 = int((x + w/2) * image.width), int((y + h/2) * image.height)
+        pod = images[index].crop((x1, y1, x2, y2))
+        segmented_pods.append(pod)
+
+    st.session_state.segmented_pods = {selected_image: segmented_pods}
+
+# Affichage des cabosses segmentées en grille
+if selected_image in st.session_state.get("segmented_pods", {}):
+    st.subheader("Cabosses segmentées")
+    pod_cols = st.columns(4)
+    for i, pod in enumerate(st.session_state.segmented_pods[selected_image]):
+        pod_cols[i % 4].image(pod, caption=f"Cabosse {i+1}", use_column_width=True)
+
+### **4. Prédiction**
+if selected_image in st.session_state.segmented_pods:
+    st.subheader("Prédiction de la maladie")
+    selected_pod = st.selectbox("Choisissez une cabosse", range(1, len(st.session_state.segmented_pods[selected_image]) + 1))
+
+    if st.button("Prédire la maladie"):
+        # Chargement des modèles CNN
+        cnn_models = load_cnn_models()
+        
+        # Extraction des caractéristiques
+        pod = st.session_state.segmented_pods[selected_image][selected_pod - 1]
+        features = extract_all_features(pod, cnn_models)
+        
+        # Réduction avec ACP
+        pca = PCA(n_components=0.99)
+        reduced_features = pca.fit_transform(features.reshape(1, -1))
+        
+        # Prédiction avec le modèle SVM
+        model = joblib.load("disease_classifier.pkl")
+        prediction = model.predict(reduced_features)[0]
+
+        # Affichage du résultat
+        st.image(pod, caption=f"Cabosse {selected_pod}", use_column_width=True)
+        st.write(f"**Maladie prédite :** {prediction}")
