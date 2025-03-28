@@ -127,7 +127,7 @@ st.subheader("Détection des cabosses")
 selected_image = st.selectbox("Choisissez une image", ["Images"] + filenames)
 
 # N'afficher l'image que si une vraie image a été choisie
-if selected_image != "Sélectionnez une image":
+if selected_image != "Images":
     index = filenames.index(selected_image)
     image = images[index].copy()  # Copie pour éviter de modifier l'originale
     draw = ImageDraw.Draw(image)
