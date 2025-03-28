@@ -137,10 +137,10 @@ if selected_image != "Images":
         x, y, w, h = bbox
         x1, y1 = (x - w/2) * image.width, (y - h/2) * image.height
         x2, y2 = (x + w/2) * image.width, (y + h/2) * image.height
-        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+        draw.rectangle([x1, y1, x2, y2], outline="yellow", width=6)
 
     # Affichage de l'image avec boîtes
-    st.image(image, use_column_width=True)
+    st.image(image, use_container_width=True)
 
 ### **3. Segmentation des cabosses**
 if st.button("Segmenter toutes les cabosses"):
